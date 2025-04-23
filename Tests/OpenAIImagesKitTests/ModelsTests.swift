@@ -5,7 +5,7 @@ final class ModelsTests: XCTestCase {
     
     func testCreateImageRequestEncoding() throws {
         let request = CreateImageRequest(
-            model: .dallE3,
+            model: .gptImage1,
             prompt: "A cute baby sea otter",
             n: 1,
             quality: .standard,
@@ -19,7 +19,7 @@ final class ModelsTests: XCTestCase {
         let data = try encoder.encode(request)
         let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
         
-        XCTAssertEqual(json["model"] as? String, "dall-e-3")
+        XCTAssertEqual(json["model"] as? String, "gpt-image-1")
         XCTAssertEqual(json["prompt"] as? String, "A cute baby sea otter")
         XCTAssertEqual(json["n"] as? Int, 1)
         XCTAssertEqual(json["quality"] as? String, "standard")

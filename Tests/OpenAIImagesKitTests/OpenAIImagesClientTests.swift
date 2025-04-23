@@ -229,12 +229,14 @@ final class OpenAIImagesClientTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
     
-    #if os(macOS) && swift(>=5.5)
     // MARK: - Async/Await Tests
     
-    @available(macOS 12.0, *)
     func testCreateImageAsync() async {
         mockNetworkSession.requestHandler = { url, method, headers, body in
+            XCTAssertEqual(url.absoluteString, "https://api.openai.com/v1/images/generations")
+            XCTAssertEqual(method, "POST")
+            XCTAssertEqual(headers["Authorization"], "Bearer \(TestFixtures.validAPIKey)")
+            
             return (
                 TestFixtures.createImageSuccessData,
                 TestFixtures.mockHTTPResponse(url: url, statusCode: 200),
@@ -250,5 +252,104 @@ final class OpenAIImagesClientTests: XCTestCase {
             XCTFail("Expected success but got error: \(error)")
         }
     }
-    #endif
+    
+    func testCreateImageWithGptImage1Model() async {
+        mockNetworkSession.requestHandler = { url, method, headers, body in
+            // Verify request contains gpt-image-1 model
+            if let body = body, let requestString = String(data: body, encoding: .utf8) {
+                XCTAssertTrue(requestString.contains("\"model\":\"gpt-image-1\""))
+            } else {
+                XCTFail("Invalid request body")
+            }
+            
+            return (
+                TestFixtures.createImageSuccessData,
+                TestFixtures.mockHTTPResponse(url: url, statusCode: 200),
+                nil
+            )
+        }
+        
+        do {
+            let response = try await client.createImage(
+                prompt: "A cute baby sea otter",
+                model: .gptImage1
+            )
+            XCTAssertEqual(response.data.count, 1)
+        } catch {
+            XCTFail("Expected success but got error: \(error)")
+        }
+    }
+    
+    func testCreateImageAsyncError() async {
+        mockNetworkSession.requestHandler = { url, method, headers, body in
+            return (
+                TestFixtures.errorResponseData,
+                TestFixtures.mockHTTPResponse(url: url, statusCode: 401),
+                nil
+            )
+        }
+        
+        do {
+            _ = try await client.createImage(prompt: "A cute baby sea otter")
+            XCTFail("Expected error but got success")
+        } catch let error as OpenAIImagesError {
+            if case let OpenAIImagesError.apiError(message, code) = error {
+                // We don't test the exact message here because it depends on the error parsing
+                // which might be different in tests vs actual code
+                XCTAssertTrue(message.contains("Incorrect API key provided"))
+                XCTAssertEqual(code, 401)
+            } else {
+                XCTFail("Expected API error but got: \(error)")
+            }
+        } catch {
+            XCTFail("Expected OpenAIImagesError but got: \(error)")
+        }
+    }
+    
+    func testEditImageAsync() async {
+        mockNetworkSession.requestHandler = { url, method, headers, body in
+            XCTAssertEqual(url.absoluteString, "https://api.openai.com/v1/images/edits")
+            XCTAssertEqual(method, "POST")
+            
+            return (
+                TestFixtures.imageEditSuccessData,
+                TestFixtures.mockHTTPResponse(url: url, statusCode: 200),
+                nil
+            )
+        }
+        
+        do {
+            let response = try await client.editImage(
+                image: TestFixtures.sampleImageData,
+                prompt: "Add a hat"
+            )
+            XCTAssertEqual(response.data.count, 1)
+            XCTAssertEqual(response.data[0].url, "https://example.com/edited-image.png")
+        } catch {
+            XCTFail("Expected success but got error: \(error)")
+        }
+    }
+    
+    func testCreateImageVariationAsync() async {
+        mockNetworkSession.requestHandler = { url, method, headers, body in
+            XCTAssertEqual(url.absoluteString, "https://api.openai.com/v1/images/variations")
+            XCTAssertEqual(method, "POST")
+            
+            return (
+                TestFixtures.imageVariationSuccessData,
+                TestFixtures.mockHTTPResponse(url: url, statusCode: 200),
+                nil
+            )
+        }
+        
+        do {
+            let response = try await client.createImageVariation(
+                image: TestFixtures.sampleImageData
+            )
+            XCTAssertEqual(response.data.count, 1)
+            XCTAssertEqual(response.data[0].url, "https://example.com/variation-image.png")
+        } catch {
+            XCTFail("Expected success but got error: \(error)")
+        }
+    }
 }
