@@ -11,12 +11,18 @@ let package = Package(
         .library(
             name: "OpenAIImagesKit",
             targets: ["OpenAIImagesKit"]),
+        .executable(
+            name: "OpenAIImagesCLI",
+            targets: ["OpenAIImagesCLI"])
     ],
     dependencies: [],
     targets: [
         .target(
             name: "OpenAIImagesKit",
             dependencies: []),
+        .executableTarget(
+            name: "OpenAIImagesCLI",
+            dependencies: ["OpenAIImagesKit"]),
         .testTarget(
             name: "OpenAIImagesKitTests",
             dependencies: ["OpenAIImagesKit"]),
