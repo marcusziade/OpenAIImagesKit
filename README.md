@@ -23,7 +23,7 @@ A Swift package for interacting with OpenAI's Images API.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/OpenAIImagesKit.git", from: "1.0.0")
+    .package(url: "https://github.com/marcusziade/OpenAIImagesKit.git", from: "1.0.0")
 ]
 ```
 
