@@ -5,7 +5,7 @@ import Foundation
 
 /// OpenAIImagesKit provides a Swift interface to the OpenAI Images API
 ///
-/// Example usage:
+/// Example usage with async/await:
 ///
 /// ```swift
 /// import OpenAIImagesKit
@@ -13,7 +13,24 @@ import Foundation
 /// // Initialize with your API key
 /// let client = OpenAIImagesClient(apiKey: "your-api-key")
 ///
-/// // Create an image
+/// // Create an image using async/await
+/// do {
+///     let response = try await client.createImage(prompt: "A cute baby sea otter")
+///     if let imageUrl = response.data.first?.url {
+///         print("Image created: \(imageUrl)")
+///     }
+/// } catch {
+///     print("Error: \(error.localizedDescription)")
+/// }
+/// ```
+///
+/// Example with completion handlers:
+///
+/// ```swift
+/// // Initialize with your API key
+/// let client = OpenAIImagesClient(apiKey: "your-api-key")
+///
+/// // Create an image with completion handler
 /// client.createImage(prompt: "A cute baby sea otter") { result in
 ///     switch result {
 ///     case .success(let response):
