@@ -32,7 +32,19 @@ import OpenAIImagesKit
 // Initialize the client
 let client = OpenAIImagesClient(apiKey: "your-api-key")
 
-// Create an image
+// Async/Await Usage (iOS 15+, macOS 12+)
+Task {
+    do {
+        let response = try await client.createImage(prompt: "A cute baby sea otter")
+        if let url = response.data.first?.url {
+            print("Image URL: \(url)")
+        }
+    } catch {
+        print("Error: \(error)")
+    }
+}
+
+// Completion Handler Usage
 client.createImage(prompt: "A cute baby sea otter") { result in
     switch result {
     case .success(let images):

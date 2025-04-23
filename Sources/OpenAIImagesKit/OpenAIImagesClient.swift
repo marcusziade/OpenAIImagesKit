@@ -207,18 +207,48 @@ public class OpenAIImagesClient {
 // MARK: - Async/Await Support
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-extension OpenAIImagesClient {
+public extension OpenAIImagesClient {
     // MARK: - Create Image
-    
-    public func createImage(request: CreateImageRequest) async throws -> ImagesResponse {
-        return try await withCheckedThrowingContinuation { continuation in
-            createImage(request: request) { result in
-                continuation.resume(with: result)
-            }
+
+    /// Creates an image using the specified `CreateImageRequest`.
+    ///
+    /// - Parameter request: The parameters for image creation.
+    /// - Returns: An `ImagesResponse` containing the generated images.
+    /// - Throws: An `OpenAIImagesError` if the request fails.
+    func createImage(request: CreateImageRequest) async throws -> ImagesResponse {
+        guard !apiKey.isEmpty else {
+            throw OpenAIImagesError.invalidAPIKey
         }
+        guard let url = URL(string: "\(baseURL)/images/generations") else {
+            throw OpenAIImagesError.invalidRequest
+        }
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(request)
+        } catch {
+            throw OpenAIImagesError.failedToEncodeRequest
+        }
+        let headers = [
+            "Content-Type": "application/json",
+            "Authorization": "Bearer \(apiKey)"
+        ]
+        return try await networkSession.performRequest(url: url, method: "POST", headers: headers, body: data)
     }
-    
-    public func createImage(
+
+    /// Creates an image with the provided parameters.
+    ///
+    /// - Parameters:
+    ///   - prompt: The prompt to generate the image.
+    ///   - model: The image generation model to use.
+    ///   - n: The number of images to generate.
+    ///   - quality: The image quality setting.
+    ///   - responseFormat: The format of the image response.
+    ///   - size: The size of the generated image.
+    ///   - style: The style to apply to the image.
+    ///   - user: An optional end-user identifier.
+    /// - Returns: An `ImagesResponse` containing the generated images.
+    /// - Throws: An `OpenAIImagesError` if the request fails.
+    func createImage(
         prompt: String,
         model: ImageModel = .dallE3,
         n: Int? = 1,
@@ -228,33 +258,60 @@ extension OpenAIImagesClient {
         style: ImageStyle? = .vivid,
         user: String? = nil
     ) async throws -> ImagesResponse {
-        return try await withCheckedThrowingContinuation { continuation in
-            createImage(
-                prompt: prompt,
-                model: model,
-                n: n,
-                quality: quality,
-                responseFormat: responseFormat,
-                size: size,
-                style: style,
-                user: user
-            ) { result in
-                continuation.resume(with: result)
-            }
-        }
+        let request = CreateImageRequest(
+            model: model,
+            prompt: prompt,
+            n: n,
+            quality: quality,
+            responseFormat: responseFormat,
+            size: size,
+            style: style,
+            user: user
+        )
+        return try await createImage(request: request)
     }
-    
+
     // MARK: - Edit Image
-    
-    public func editImage(request: CreateImageEditRequest) async throws -> ImagesResponse {
-        return try await withCheckedThrowingContinuation { continuation in
-            editImage(request: request) { result in
-                continuation.resume(with: result)
-            }
+
+    /// Edits an existing image using the specified `CreateImageEditRequest`.
+    ///
+    /// - Parameter request: The parameters for image editing.
+    /// - Returns: An `ImagesResponse` containing the edited images.
+    /// - Throws: An `OpenAIImagesError` if the request fails.
+    func editImage(request: CreateImageEditRequest) async throws -> ImagesResponse {
+        guard !apiKey.isEmpty else {
+            throw OpenAIImagesError.invalidAPIKey
         }
+        guard let url = URL(string: "\(baseURL)/images/edits") else {
+            throw OpenAIImagesError.invalidRequest
+        }
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(request)
+        } catch {
+            throw OpenAIImagesError.failedToEncodeRequest
+        }
+        let headers = [
+            "Content-Type": "application/json",
+            "Authorization": "Bearer \(apiKey)"
+        ]
+        return try await networkSession.performRequest(url: url, method: "POST", headers: headers, body: data)
     }
-    
-    public func editImage(
+
+    /// Edits an image with the provided parameters.
+    ///
+    /// - Parameters:
+    ///   - image: The image data to edit.
+    ///   - mask: Optional mask data to guide the edit.
+    ///   - prompt: The prompt describing the edit.
+    ///   - model: The image editing model to use.
+    ///   - n: The number of images to generate.
+    ///   - size: The size of the edited image.
+    ///   - responseFormat: The format of the image response.
+    ///   - user: An optional end-user identifier.
+    /// - Returns: An `ImagesResponse` containing the edited images.
+    /// - Throws: An `OpenAIImagesError` if the request fails.
+    func editImage(
         image: Data,
         mask: Data? = nil,
         prompt: String,
@@ -264,33 +321,60 @@ extension OpenAIImagesClient {
         responseFormat: ResponseFormat? = .url,
         user: String? = nil
     ) async throws -> ImagesResponse {
-        return try await withCheckedThrowingContinuation { continuation in
-            editImage(
-                image: image,
-                mask: mask,
-                prompt: prompt,
-                model: model,
-                n: n,
-                size: size,
-                responseFormat: responseFormat,
-                user: user
-            ) { result in
-                continuation.resume(with: result)
-            }
-        }
+        let base64Image = image.base64EncodedString()
+        let base64Mask = mask?.base64EncodedString()
+        let request = CreateImageEditRequest(
+            image: base64Image,
+            mask: base64Mask,
+            model: model,
+            prompt: prompt,
+            n: n,
+            size: size,
+            responseFormat: responseFormat,
+            user: user
+        )
+        return try await editImage(request: request)
     }
-    
+
     // MARK: - Create Image Variation
-    
-    public func createImageVariation(request: CreateImageVariationRequest) async throws -> ImagesResponse {
-        return try await withCheckedThrowingContinuation { continuation in
-            createImageVariation(request: request) { result in
-                continuation.resume(with: result)
-            }
+
+    /// Creates a variation of an image using the specified `CreateImageVariationRequest`.
+    ///
+    /// - Parameter request: The parameters for creating an image variation.
+    /// - Returns: An `ImagesResponse` containing the image variations.
+    /// - Throws: An `OpenAIImagesError` if the request fails.
+    func createImageVariation(request: CreateImageVariationRequest) async throws -> ImagesResponse {
+        guard !apiKey.isEmpty else {
+            throw OpenAIImagesError.invalidAPIKey
         }
+        guard let url = URL(string: "\(baseURL)/images/variations") else {
+            throw OpenAIImagesError.invalidRequest
+        }
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(request)
+        } catch {
+            throw OpenAIImagesError.failedToEncodeRequest
+        }
+        let headers = [
+            "Content-Type": "application/json",
+            "Authorization": "Bearer \(apiKey)"
+        ]
+        return try await networkSession.performRequest(url: url, method: "POST", headers: headers, body: data)
     }
-    
-    public func createImageVariation(
+
+    /// Creates a variation of an image with the provided parameters.
+    ///
+    /// - Parameters:
+    ///   - image: The image data to vary.
+    ///   - model: The image variation model to use.
+    ///   - n: The number of image variations to generate.
+    ///   - responseFormat: The format of the image response.
+    ///   - size: The size of the image variation.
+    ///   - user: An optional end-user identifier.
+    /// - Returns: An `ImagesResponse` containing the image variations.
+    /// - Throws: An `OpenAIImagesError` if the request fails.
+    func createImageVariation(
         image: Data,
         model: ImageModel = .dallE2,
         n: Int? = 1,
@@ -298,17 +382,15 @@ extension OpenAIImagesClient {
         size: ImageSize? = .size1024x1024,
         user: String? = nil
     ) async throws -> ImagesResponse {
-        return try await withCheckedThrowingContinuation { continuation in
-            createImageVariation(
-                image: image,
-                model: model,
-                n: n,
-                responseFormat: responseFormat,
-                size: size,
-                user: user
-            ) { result in
-                continuation.resume(with: result)
-            }
-        }
+        let base64Image = image.base64EncodedString()
+        let request = CreateImageVariationRequest(
+            image: base64Image,
+            model: model,
+            n: n,
+            responseFormat: responseFormat,
+            size: size,
+            user: user
+        )
+        return try await createImageVariation(request: request)
     }
 }

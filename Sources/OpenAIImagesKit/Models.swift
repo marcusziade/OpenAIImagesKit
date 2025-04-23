@@ -1,6 +1,7 @@
 import Foundation
 
 public enum ImageModel: String, Codable {
+    case gptImage1 = "gpt-image-1"
     case dallE2 = "dall-e-2"
     case dallE3 = "dall-e-3"
 }
@@ -65,7 +66,7 @@ public struct CreateImageRequest: Codable {
     }
     
     public init(
-        model: ImageModel = .dallE3,
+        model: ImageModel = .gptImage1,
         prompt: String,
         n: Int? = 1,
         quality: ImageQuality? = .standard,
