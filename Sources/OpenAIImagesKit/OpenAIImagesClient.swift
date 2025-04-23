@@ -51,17 +51,25 @@ public class OpenAIImagesClient {
     ///   - size: The size of the generated image.
     ///   - style: The style to apply to the image.
     ///   - user: An optional end-user identifier.
+    ///   - background: (gpt-image-1 only) Background type (transparent, opaque, auto).
+    ///   - outputFormat: (gpt-image-1 only) Format of the generated image (png, jpeg, webp).
+    ///   - outputCompression: (gpt-image-1 only) Compression level (0-100) for webp/jpeg.
+    ///   - moderation: (gpt-image-1 only) Content moderation level (low, auto).
     /// - Returns: An `ImagesResponse` containing the generated images.
     /// - Throws: An `OpenAIImagesError` if the request fails.
     public func createImage(
         prompt: String,
         model: ImageModel = .gptImage1,
         n: Int? = 1,
-        quality: ImageQuality? = .standard,
+        quality: ImageQuality? = .auto,
         responseFormat: ResponseFormat? = .url,
-        size: ImageSize = .size1024x1024,
+        size: ImageSize = .auto,
         style: ImageStyle? = .vivid,
-        user: String? = nil
+        user: String? = nil,
+        background: BackgroundType? = nil,
+        outputFormat: OutputFormat? = nil,
+        outputCompression: Int? = nil,
+        moderation: ModerationLevel? = nil
     ) async throws -> ImagesResponse {
         let request = CreateImageRequest(
             model: model,
@@ -71,7 +79,11 @@ public class OpenAIImagesClient {
             responseFormat: responseFormat,
             size: size,
             style: style,
-            user: user
+            user: user,
+            background: background,
+            outputFormat: outputFormat,
+            outputCompression: outputCompression,
+            moderation: moderation
         )
         return try await createImage(request: request)
     }
@@ -235,11 +247,15 @@ public class OpenAIImagesClient {
         prompt: String,
         model: ImageModel = .gptImage1,
         n: Int? = 1,
-        quality: ImageQuality? = .standard,
+        quality: ImageQuality? = .auto,
         responseFormat: ResponseFormat? = .url,
-        size: ImageSize = .size1024x1024,
+        size: ImageSize = .auto,
         style: ImageStyle? = .vivid,
         user: String? = nil,
+        background: BackgroundType? = nil,
+        outputFormat: OutputFormat? = nil,
+        outputCompression: Int? = nil,
+        moderation: ModerationLevel? = nil,
         completion: @escaping (Result<ImagesResponse, Error>) -> Void
     ) {
         let request = CreateImageRequest(
@@ -250,7 +266,11 @@ public class OpenAIImagesClient {
             responseFormat: responseFormat,
             size: size,
             style: style,
-            user: user
+            user: user,
+            background: background,
+            outputFormat: outputFormat,
+            outputCompression: outputCompression,
+            moderation: moderation
         )
         
         createImage(request: request, completion: completion)
