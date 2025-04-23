@@ -3,7 +3,7 @@ import Foundation
 import FoundationNetworking
 #endif
 
-protocol NetworkSessionProtocol {
+public protocol NetworkSessionProtocol {
     func performRequest<T: Decodable>(
         url: URL,
         method: String,
@@ -13,8 +13,8 @@ protocol NetworkSessionProtocol {
     )
 }
 
-class NetworkSession: NetworkSessionProtocol {
-    func performRequest<T: Decodable>(
+public class NetworkSession: NetworkSessionProtocol {
+    public func performRequest<T: Decodable>(
         url: URL,
         method: String,
         headers: [String: String],
